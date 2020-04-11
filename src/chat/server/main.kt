@@ -5,17 +5,27 @@ import java.net.ServerSocket
 import kotlin.system.exitProcess
 
 import chat.utils.Log
+import java.net.Socket
 
 const val SERVER_PORT = 8080
 
 fun main() {
+    var serverSocket: ServerSocket? = null;
+
     try {
-        val serverSocket = ServerSocket(SERVER_PORT)
+        serverSocket = ServerSocket(SERVER_PORT)
         Log.info("Server started on 0.0.0.0:$SERVER_PORT")
 
         val chat = Chat()
         while (true) {
-            val clientSocket = serverSocket.accept()
+            val clientSocket: Socket;
+
+            try {
+                clientSocket = serverSocket.accept()
+            } catch (e: Exception) {
+                Log.exception("Error during client connecting", e)
+                continue
+            }
 
             Log.info("New client connected")
             val client = Client(
@@ -30,5 +40,7 @@ fun main() {
     } catch (e: Exception) {
         Log.exception("Server crashed", e)
         exitProcess(1)
+    } finally {
+        serverSocket?.close()
     }
 }

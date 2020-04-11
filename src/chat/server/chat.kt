@@ -24,12 +24,20 @@ class Chat {
         sendToAll(formatMessage("$username disconnected"))
     }
 
+    @Synchronized
     fun addClient(client: Client) {
         clients.add(client)
     }
 
+    @Synchronized
+    fun removeClient(client: Client) {
+        clients.remove(client)
+    }
+
     private fun sendToAll(text: String) {
-        clients.forEach { it.send(text) }
+        clients.forEach {
+            it.send(text)
+        }
     }
 
     private fun formatMessage(message: String): String {

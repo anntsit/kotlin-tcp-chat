@@ -1,6 +1,11 @@
 package chat.server
 
+import chat.utils.Log
 import java.io.*
+import java.lang.Exception
+
+
+class NullMessageException: Exception()
 
 
 class Client(input: InputStream, output: OutputStream, private val chat: Chat): Thread() {
@@ -11,6 +16,11 @@ class Client(input: InputStream, output: OutputStream, private val chat: Chat): 
     private fun readMessageFromInput(): String {
         while(true) {
             val message = buffInput.readLine()
+
+            if (message == null) {
+                throw NullMessageException()
+            }
+
             if (!message.isNullOrEmpty()) {
                 return message
             }
@@ -22,6 +32,7 @@ class Client(input: InputStream, output: OutputStream, private val chat: Chat): 
         username = readMessageFromInput()
         chat.onUserConnected(username)
         chat.addClient(this)
+        Log.info("User `$username` is initited")
     }
 
     private fun formatText(text: String): String {
@@ -40,11 +51,20 @@ class Client(input: InputStream, output: OutputStream, private val chat: Chat): 
     }
 
     override fun run() {
-        initClient()
+        try {
+            initClient()
 
-        while (true) {
-            val message = readMessageFromInput()
-            chat.onMessageFromUserReceived(username, message)
+            while (true) {
+                val message = readMessageFromInput()
+                chat.onMessageFromUserReceived(username, message)
+            }
+        } catch (e: Exception) {
+            Log.exception("ClientError", e)
+            chat.removeClient(this)
+            chat.onUserDisconnected(username)
+        } finally {
+            buffInput.close()
+            buffOutput.close()
         }
     }
 }
