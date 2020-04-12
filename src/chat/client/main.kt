@@ -51,7 +51,9 @@ fun main() {
         serverWriter = BufferedWriter(OutputStreamWriter(socket.getOutputStream()))
         consoleReader = BufferedReader(InputStreamReader(System.`in`))
 
-        MessageReader(serverReader).start()
+        val messageReaderThread = MessageReader(serverReader)
+        messageReaderThread.setDaemon(true)
+        messageReaderThread.start()
 
         val userName = readMessageFromReader(consoleReader)
         writeMessage(serverWriter, userName)
